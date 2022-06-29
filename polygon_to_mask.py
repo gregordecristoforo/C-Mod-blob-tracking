@@ -1,9 +1,5 @@
 import numpy as np
-import shapely
-from shapely.geometry import Polygon
 from matplotlib.path import Path
-import pickle
-import matplotlib.pyplot as plt
 
 
 def get_poly_mask(poly, n_x, n_y):
@@ -29,12 +25,3 @@ def get_poly_mask(poly, n_x, n_y):
             .reshape(n_x, n_y)
         ] = 1.0
     return mask.astype(bool)
-
-
-data = pickle.load(open("1091216028_1.45_raft.pickle", "rb"))
-example_polygon = data["output_tracking"][301][0][4]
-
-tmp = get_poly_mask(example_polygon, 256, 256)
-
-plt.contourf(tmp.T)
-plt.show()
