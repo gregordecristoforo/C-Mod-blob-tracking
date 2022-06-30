@@ -69,5 +69,3 @@ list_of_blobs.pop(0)
 
 with open("list_of_blobs.pickle", "wb") as handle:
     pickle.dump(list_of_blobs, handle)
-
-print(list_of_blobs[0].life_time)
