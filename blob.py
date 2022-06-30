@@ -1,6 +1,7 @@
 from shapely.geometry import Polygon
 from typing import List
 import numpy as np
+from polygon_to_mask import get_poly_mask
 
 
 class Blob:
@@ -26,6 +27,8 @@ class Blob:
         self._sampling_frequency = 390804  # Hz
         self.velocities_x = self._calculate_velocity_x()
         self.velocities_y = self._calculate_velocity_y()
+        self.sizes = self._calculate_sizes()
+        # self.amplitudes = self._calculate_amplitudes()
 
     def _calculate_velocity_x(self):
         if self.life_time == 0:
@@ -36,3 +39,13 @@ class Blob:
         if self.life_time == 0:
             return 0
         return np.diff(self.centers_of_mass_y) * self._sampling_frequency
+
+    def _calculate_sizes(self):
+        _sizes = []
+        for frame in range(len(self.polygon_of_predicted_blobs)):
+            mask = get_poly_mask(self.polygon_of_predicted_blobs[frame], 64, 64)
+            _sizes.append(mask.sum())
+        return _sizes
+
+    def _calculate_amplitudes():
+        raise NotImplementedError
