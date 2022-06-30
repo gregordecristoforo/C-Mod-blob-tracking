@@ -45,45 +45,49 @@ polygon_of_brightness_contours = [polygon_of_brightness_contours[i] for i in sor
 frames_of_appearance = [frames_of_appearance[i] for i in sort_index]
 
 
-# last_blob_id = 0
-# list_of_blobs = []
+last_blob_id = 0
+list_of_blobs = []
 
-# temp_VIoUs = []
-# temp_centers_of_mass_x = []
-# temp_centers_of_mass_y = []
-# temp_polygon_of_predicted_blobs = []
-# temp_polygon_of_brightness_contours = []
+temp_VIoUs = []
+temp_centers_of_mass_x = []
+temp_centers_of_mass_y = []
+temp_polygon_of_predicted_blobs = []
+temp_polygon_of_brightness_contours = []
+temp_frames_of_appearance = []
 
-# blob_ids.append(np.inf)
-# for i in range(len(blob_ids)):
+blob_ids.append(np.inf)
+for i in range(len(blob_ids)):
 
-#     if blob_ids[i] != last_blob_id:
-#         blob = Blob(
-#             last_blob_id,
-#             temp_VIoUs,
-#             temp_centers_of_mass_x,
-#             temp_centers_of_mass_y,
-#             temp_polygon_of_predicted_blobs,
-#             temp_polygon_of_brightness_contours,
-#         )
-#         list_of_blobs.append(blob)
+    if blob_ids[i] != last_blob_id:
+        blob = Blob(
+            last_blob_id,
+            temp_VIoUs,
+            temp_centers_of_mass_x,
+            temp_centers_of_mass_y,
+            temp_polygon_of_predicted_blobs,
+            temp_polygon_of_brightness_contours,
+            temp_frames_of_appearance,
+        )
+        list_of_blobs.append(blob)
 
-#         temp_VIoUs = []
-#         temp_centers_of_mass_x = []
-#         temp_centers_of_mass_y = []
-#         temp_polygon_of_predicted_blobs = []
-#         temp_polygon_of_brightness_contours = []
+        temp_VIoUs = []
+        temp_centers_of_mass_x = []
+        temp_centers_of_mass_y = []
+        temp_polygon_of_predicted_blobs = []
+        temp_polygon_of_brightness_contours = []
+        temp_frames_of_appearance = []
 
-#     if blob_ids[i] != np.inf:
-#         temp_VIoUs.append(VIoUs[i])
-#         temp_centers_of_mass_x.append(centers_of_mass_x[i])
-#         temp_centers_of_mass_y.append(centers_of_mass_y[i])
-#         temp_polygon_of_predicted_blobs.append(polygon_of_predicted_blobs[i])
-#         temp_polygon_of_brightness_contours.append(polygon_of_brightness_contours[i])
-#     last_blob_id = blob_ids[i]
+    if blob_ids[i] != np.inf:
+        temp_VIoUs.append(VIoUs[i])
+        temp_centers_of_mass_x.append(centers_of_mass_x[i])
+        temp_centers_of_mass_y.append(centers_of_mass_y[i])
+        temp_polygon_of_predicted_blobs.append(polygon_of_predicted_blobs[i])
+        temp_polygon_of_brightness_contours.append(polygon_of_brightness_contours[i])
+        temp_frames_of_appearance.append(frames_of_appearance[i])
+    last_blob_id = blob_ids[i]
 
-# list_of_blobs.pop(0)
+list_of_blobs.pop(0)
 
 
-# with open("list_of_blobs.pickle", "wb") as handle:
-#     pickle.dump(list_of_blobs, handle)
+with open("list_of_blobs.pickle", "wb") as handle:
+    pickle.dump(list_of_blobs, handle)

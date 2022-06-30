@@ -12,6 +12,7 @@ class Blob:
         centers_of_mass_y: List[float],
         polygon_of_predicted_blobs: List[Polygon],
         polygon_of_brightness_contours: List[Polygon],
+        frames_of_appearance: List[int],
     ):
 
         self.blob_id = blob_id
@@ -20,6 +21,7 @@ class Blob:
         self.centers_of_mass_y = centers_of_mass_y
         self.polygon_of_predicted_blobs = polygon_of_predicted_blobs
         self.polygon_of_brightness_contours = polygon_of_brightness_contours
+        self.frames_of_appearance = frames_of_appearance
         self.life_time = len(self.VIoU)
         self._sampling_frequency = 390804  # Hz
         self.velocities_x = self._calculate_velocity_x()
