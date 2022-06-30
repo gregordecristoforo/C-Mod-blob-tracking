@@ -6,7 +6,7 @@ import numpy as np
 from blob import Blob
 
 data = pickle.load(open("1091216028_1.45_raft.pickle", "rb"))
-# example_polygon = data["output_tracking"][301][0][4]
+
 
 blob_ids = []
 VIoUs = []
@@ -14,58 +14,76 @@ centers_of_mass_x = []
 centers_of_mass_y = []
 polygon_of_predicted_blobs = []
 polygon_of_brightness_contours = []
+frames_of_appearance = []
 
 for i in range(len(data["output_tracking"])):
+    blobs_in_frame = data["output_tracking"][i]
 
-    frame_data = data["output_tracking"][i]
+    if blobs_in_frame is None:
+        continue
 
-    with contextlib.suppress(IndexError):
-        blob_ids.append(frame_data[0][0])
-        VIoUs.append(frame_data[0][1])
-        centers_of_mass_x.append(frame_data[0][2])
-        centers_of_mass_y.append(frame_data[0][3])
-        polygon_of_predicted_blobs.append(frame_data[0][4])
-        polygon_of_brightness_contours.append(frame_data[0][5])
+    for blob in range(len(blobs_in_frame)):
+        blob_ids.append(blobs_in_frame[blob][0])
+        VIoUs.append(blobs_in_frame[blob][1])
+        centers_of_mass_x.append(blobs_in_frame[blob][2])
+        centers_of_mass_y.append(blobs_in_frame[blob][3])
+        polygon_of_predicted_blobs.append(blobs_in_frame[blob][4])
+        polygon_of_brightness_contours.append(blobs_in_frame[blob][5])
+        frames_of_appearance.append(i)
 
-last_blob_id = 0
-list_of_blobs = []
+# sorting the blobs by blob_id
+tmp = [[blob_ids[i], i] for i in range(len(blob_ids))]
+tmp.sort()
+sort_index = [x[1] for x in tmp]
 
-temp_VIoUs = []
-temp_centers_of_mass_x = []
-temp_centers_of_mass_y = []
-temp_polygon_of_predicted_blobs = []
-temp_polygon_of_brightness_contours = []
-
-blob_ids.append(np.inf)
-for i in range(len(blob_ids)):
-
-    if blob_ids[i] != last_blob_id:
-        blob = Blob(
-            last_blob_id,
-            temp_VIoUs,
-            temp_centers_of_mass_x,
-            temp_centers_of_mass_y,
-            temp_polygon_of_predicted_blobs,
-            temp_polygon_of_brightness_contours,
-        )
-        list_of_blobs.append(blob)
-
-        temp_VIoUs = []
-        temp_centers_of_mass_x = []
-        temp_centers_of_mass_y = []
-        temp_polygon_of_predicted_blobs = []
-        temp_polygon_of_brightness_contours = []
-
-    if blob_ids[i] != np.inf:
-        temp_VIoUs.append(VIoUs[i])
-        temp_centers_of_mass_x.append(centers_of_mass_x[i])
-        temp_centers_of_mass_y.append(centers_of_mass_y[i])
-        temp_polygon_of_predicted_blobs.append(polygon_of_predicted_blobs[i])
-        temp_polygon_of_brightness_contours.append(polygon_of_brightness_contours[i])
-    last_blob_id = blob_ids[i]
-
-list_of_blobs.pop(0)
+blob_ids = [blob_ids[i] for i in sort_index]
+VIoUs = [VIoUs[i] for i in sort_index]
+centers_of_mass_x = [centers_of_mass_x[i] for i in sort_index]
+centers_of_mass_y = [centers_of_mass_y[i] for i in sort_index]
+polygon_of_predicted_blobs = [polygon_of_predicted_blobs[i] for i in sort_index]
+polygon_of_brightness_contours = [polygon_of_brightness_contours[i] for i in sort_index]
+frames_of_appearance = [frames_of_appearance[i] for i in sort_index]
 
 
-with open("list_of_blobs.pickle", "wb") as handle:
-    pickle.dump(list_of_blobs, handle)
+# last_blob_id = 0
+# list_of_blobs = []
+
+# temp_VIoUs = []
+# temp_centers_of_mass_x = []
+# temp_centers_of_mass_y = []
+# temp_polygon_of_predicted_blobs = []
+# temp_polygon_of_brightness_contours = []
+
+# blob_ids.append(np.inf)
+# for i in range(len(blob_ids)):
+
+#     if blob_ids[i] != last_blob_id:
+#         blob = Blob(
+#             last_blob_id,
+#             temp_VIoUs,
+#             temp_centers_of_mass_x,
+#             temp_centers_of_mass_y,
+#             temp_polygon_of_predicted_blobs,
+#             temp_polygon_of_brightness_contours,
+#         )
+#         list_of_blobs.append(blob)
+
+#         temp_VIoUs = []
+#         temp_centers_of_mass_x = []
+#         temp_centers_of_mass_y = []
+#         temp_polygon_of_predicted_blobs = []
+#         temp_polygon_of_brightness_contours = []
+
+#     if blob_ids[i] != np.inf:
+#         temp_VIoUs.append(VIoUs[i])
+#         temp_centers_of_mass_x.append(centers_of_mass_x[i])
+#         temp_centers_of_mass_y.append(centers_of_mass_y[i])
+#         temp_polygon_of_predicted_blobs.append(polygon_of_predicted_blobs[i])
+#         temp_polygon_of_brightness_contours.append(polygon_of_brightness_contours[i])
+#     last_blob_id = blob_ids[i]
+
+# list_of_blobs.pop(0)
+
+
+# with open("list_of_blobs.pickle", "wb") as handle:
+#     pickle.dump(list_of_blobs, handle)
