@@ -5,10 +5,10 @@ import click
 
 
 @click.command()
-@click.option("--file", default="1091216028_1.45_raft.pickle", help="raft output file.")
+@click.option("--file", default="1091216028_1.45_raft", help="raft output file.")
 def create_blob_list(file):
-    data = pickle.load(open(file, "rb"))
-    # data = pickle.load(open("1091216028_1.45_raft.pickle", "rb"))
+    data = pickle.load(open(f"{file}.pickle", "rb"))
+
     blob_ids = []
     VIoUs = []
     centers_of_mass_x = []
@@ -91,7 +91,7 @@ def create_blob_list(file):
         last_blob_id = blob_ids[i]
 
     list_of_blobs.pop(0)
-    pickle.dump(list_of_blobs, open("blobs_list.pickle", "wb"))
+    pickle.dump(list_of_blobs, open(f"{file}_blobs.pickle", "wb"))
 
 
 if __name__ == "__main__":
