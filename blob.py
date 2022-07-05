@@ -2,11 +2,13 @@ from shapely.geometry import Polygon
 from typing import List
 import numpy as np
 from polygon_to_mask import get_poly_mask
+import xarray as xr
 
 
 class Blob:
     def __init__(
         self,
+        file_name: str,
         blob_id: int,
         VIoU: List[float],
         centers_of_mass_x: List[float],
@@ -15,7 +17,7 @@ class Blob:
         polygon_of_brightness_contours: List[Polygon],
         frames_of_appearance: List[int],
     ):
-
+        self.file_name = file_name.replace("_raft", "")
         self.blob_id = blob_id
         self.VIoU = VIoU
         self.centers_of_mass_x = centers_of_mass_x
@@ -49,3 +51,6 @@ class Blob:
 
     def _calculate_amplitudes():
         raise NotImplementedError
+
+    def _load_raw_data(self):
+        ds = xr.load_dataset("short_dataset_coordinates_included.nc")

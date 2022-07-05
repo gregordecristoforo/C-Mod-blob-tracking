@@ -62,6 +62,7 @@ def create_blob_list(file):
 
         if blob_ids[i] != last_blob_id:
             blob = Blob(
+                file,
                 last_blob_id,
                 temp_VIoUs,
                 temp_centers_of_mass_x,
