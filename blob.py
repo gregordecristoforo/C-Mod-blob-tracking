@@ -26,7 +26,7 @@ class Blob:
         self.polygon_of_brightness_contours = polygon_of_brightness_contours
         self.frames_of_appearance = frames_of_appearance
         self.life_time = len(self.VIoU)
-        self._sampling_frequency = 390804  # Hz
+        self._sampling_frequency = self._extract_sampling_frequency()
         self.velocities_x = self._calculate_velocity_x()
         self.velocities_y = self._calculate_velocity_y()
         self.sizes = self._calculate_sizes()
@@ -63,3 +63,7 @@ class Blob:
 
     def _load_raw_data(self):
         return xr.load_dataset(f"{self.file_name}.nc")
+
+    def _extract_sampling_frequency(self):
+        ds = self._load_raw_data()
+        return 1 / np.diff(ds.time.values)[0]
