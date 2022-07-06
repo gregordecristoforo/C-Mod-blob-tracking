@@ -27,20 +27,26 @@ class Blob:
         self.frames_of_appearance = frames_of_appearance
         self.life_time = len(self.VIoU)
         self._sampling_frequency = self._extract_sampling_frequency()
-        self.velocities_x = self._calculate_velocity_x()
-        self.velocities_y = self._calculate_velocity_y()
+        self.velocities_R = self._calculate_velocity_R()
+        self.velocities_Z = self._calculate_velocity_Z()
         self.sizes = self._calculate_sizes()
         self.amplitudes = self._calculate_amplitudes()
 
-    def _calculate_velocity_x(self):
+    def _calculate_velocity_R(self):
         if self.life_time == 0:
             return 0
-        return np.diff(self.centers_of_mass_x) * self._sampling_frequency
+        dx_norm = (
+            self._extract_dx() / 4
+        )  # /4 because of reducing sampling from 256 to 64
+        return np.diff(self.centers_of_mass_x) * self._sampling_frequency * dx_norm
 
-    def _calculate_velocity_y(self):
+    def _calculate_velocity_Z(self):
         if self.life_time == 0:
             return 0
-        return np.diff(self.centers_of_mass_y) * self._sampling_frequency
+        dy_norm = (
+            self._extract_dy() / 4
+        )  # /4 because of reducing sampling from 256 to 64
+        return np.diff(self.centers_of_mass_y) * self._sampling_frequency * dy_norm
 
     def _calculate_sizes(self):
         _sizes = []
