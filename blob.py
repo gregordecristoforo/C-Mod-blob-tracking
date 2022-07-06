@@ -67,3 +67,13 @@ class Blob:
     def _extract_sampling_frequency(self):
         ds = self._load_raw_data()
         return 1 / np.diff(ds.time.values)[0]
+
+    def _extract_dx(self):
+        ds = self._load_raw_data()
+        return np.abs(ds.R.diff("x").values[0, 0])
+
+    def _extract_dy(self):
+        ds = self._load_raw_data()
+        return np.mean(
+            ds.Z.diff("y").values
+        )  # mean values since min is 0.09920597 and max is 0.099206686
