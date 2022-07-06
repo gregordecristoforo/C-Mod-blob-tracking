@@ -30,7 +30,7 @@ class Blob:
         self.velocities_x = self._calculate_velocity_x()
         self.velocities_y = self._calculate_velocity_y()
         self.sizes = self._calculate_sizes()
-        # self.amplitudes = self._calculate_amplitudes()
+        self.amplitudes = self._calculate_amplitudes()
 
     def _calculate_velocity_x(self):
         if self.life_time == 0:
@@ -49,8 +49,17 @@ class Blob:
             _sizes.append(mask.sum())
         return _sizes
 
-    def _calculate_amplitudes():
-        raise NotImplementedError
+    def _calculate_amplitudes(self):
+        ds = self._load_raw_data()
+
+        amplitudes = []
+        for i, frame in enumerate(self.frames_of_appearance):
+            single_frame_data = ds.frames.isel(time=frame).values
+            mask = get_poly_mask(self.polygon_of_predicted_blobs[i], 64, 64)
+            blob_density = single_frame_data[mask.T]
+            amplitudes.append(np.max(blob_density))
+
+        return amplitudes
 
     def _load_raw_data(self):
-        ds = xr.load_dataset("short_dataset_coordinates_included.nc")
+        return xr.load_dataset(f"{self.file_name}.nc")
