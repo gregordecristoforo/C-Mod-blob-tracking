@@ -4,6 +4,7 @@ import numpy as np
 from polygon_to_mask import get_poly_mask
 import xarray as xr
 from scipy.signal import savgol_filter
+import matplotlib.pyplot as plt
 
 
 class Blob:
@@ -30,7 +31,7 @@ class Blob:
         self._sampling_frequency = self._extract_sampling_frequency()
         self.velocities_R = self._calculate_velocity_R()
         self.velocities_Z = self._calculate_velocity_Z()
-        self.sizes = self._calculate_sizes()
+        self.sizes, self.sizes_R, self.sizes_Z = self._calculate_sizes()
         self.amplitudes = self._calculate_amplitudes()
 
     def __repr__(self) -> str:
@@ -54,10 +55,17 @@ class Blob:
 
     def _calculate_sizes(self):
         _sizes = []
+        _sizes_R = []
+        _sizes_Z = []
         for frame in range(len(self.polygon_of_predicted_blobs)):
             mask = get_poly_mask(self.polygon_of_predicted_blobs[frame], 64, 64)
+            rows, cols = np.where(mask)
+            size_R = np.max(rows) - np.min(rows)
+            size_Z = np.max(cols) - np.min(cols)
             _sizes.append(mask.sum())
-        return _sizes
+            _sizes_R.append(size_R*self._extract_dx())
+            _sizes_Z.append(size_Z*self._extract_dy())
+        return _sizes, _sizes_R, _sizes_Z
 
     def _calculate_amplitudes(self):
         ds = self._load_raw_data()
@@ -92,6 +100,9 @@ class Blob:
         try:
             self.amplitudes = savgol_filter(self.amplitudes, window_length, polyorder)
             self.sizes = savgol_filter(self.sizes, window_length, polyorder)
+            self.sizes_R = savgol_filter(self.sizes_R, window_length, polyorder)
+            self.sizes_Z = savgol_filter(self.sizes_Z, window_length, polyorder)
+
             self.velocities_R = savgol_filter(
                 self.velocities_R, window_length - 1, polyorder
             )
