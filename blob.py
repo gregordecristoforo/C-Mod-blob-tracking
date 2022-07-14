@@ -3,6 +3,7 @@ from typing import List
 import numpy as np
 from polygon_to_mask import get_poly_mask
 import xarray as xr
+from scipy.signal import savgol_filter
 
 
 class Blob:
@@ -31,6 +32,9 @@ class Blob:
         self.velocities_Z = self._calculate_velocity_Z()
         self.sizes = self._calculate_sizes()
         self.amplitudes = self._calculate_amplitudes()
+
+    def __repr__(self) -> str:
+        return f"Blob with blob_id: {self.blob_id}"
 
     def _calculate_velocity_R(self):
         if self.life_time == 0:
@@ -83,3 +87,16 @@ class Blob:
         return np.mean(
             ds.Z.diff("y").values
         )  # mean values since min is 0.09920597 and max is 0.099206686
+
+    def smoothen_all_parameters(self, window_length=5, polyorder=1):
+        try:
+            self.amplitudes = savgol_filter(self.amplitudes, window_length, polyorder)
+            self.sizes = savgol_filter(self.sizes, window_length, polyorder)
+            self.velocities_R = savgol_filter(
+                self.velocities_R, window_length - 1, polyorder
+            )
+            self.velocities_Z = savgol_filter(
+                self.velocities_Z, window_length - 1, polyorder
+            )
+        except Exception:
+            print("blob lifetime to short for savgol filter")
