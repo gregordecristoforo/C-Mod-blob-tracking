@@ -80,12 +80,12 @@ class Blob:
 
     def _extract_dx(self):
         ds = self._load_raw_data()
-        return np.abs(ds.R.diff("x").values[0, 0])
+        return np.abs(ds.R.diff("x").values[0, 0]) * 0.01  # 0.01 for cm to m conversion
 
     def _extract_dy(self):
         ds = self._load_raw_data()
-        return np.mean(
-            ds.Z.diff("y").values
+        return (
+            np.mean(ds.Z.diff("y").values) * 0.01
         )  # mean values since min is 0.09920597 and max is 0.099206686
 
     def smoothen_all_parameters(self, window_length=5, polyorder=1):
