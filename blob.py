@@ -1,3 +1,4 @@
+import contextlib
 from shapely.geometry import Polygon
 from typing import List
 import numpy as np
@@ -19,15 +20,15 @@ class Blob:
         polygon_of_brightness_contours: List[Polygon],
         frames_of_appearance: List[int],
     ):
-        self.file_name = file_name.replace("_raft", "")
+        self._file_name = file_name.replace("_raft", "")
         self.blob_id = blob_id
-        self.VIoU = VIoU
-        self.centers_of_mass_x = centers_of_mass_x
-        self.centers_of_mass_y = centers_of_mass_y
-        self.polygon_of_predicted_blobs = polygon_of_predicted_blobs
-        self.polygon_of_brightness_contours = polygon_of_brightness_contours
+        self._VIoU = VIoU
+        self._centers_of_mass_x = centers_of_mass_x
+        self._centers_of_mass_y = centers_of_mass_y
+        self._polygon_of_predicted_blobs = polygon_of_predicted_blobs
+        self._polygon_of_brightness_contours = polygon_of_brightness_contours
         self.frames_of_appearance = frames_of_appearance
-        self.life_time = len(self.VIoU)
+        self.life_time = len(self._VIoU)
         self._sampling_frequency = self._extract_sampling_frequency()
         self.velocities_R = self._calculate_velocity_R()
         self.velocities_Z = self._calculate_velocity_Z()
@@ -43,7 +44,7 @@ class Blob:
         dx_norm = (
             self._extract_dx() / 4
         )  # /4 because of reducing sampling from 256 to 64
-        return np.diff(self.centers_of_mass_x) * self._sampling_frequency * dx_norm
+        return np.diff(self._centers_of_mass_x) * self._sampling_frequency * dx_norm
 
     def _calculate_velocity_Z(self):
         if self.life_time == 0:
@@ -51,20 +52,22 @@ class Blob:
         dy_norm = (
             self._extract_dy() / 4
         )  # /4 because of reducing sampling from 256 to 64
-        return np.diff(self.centers_of_mass_y) * self._sampling_frequency * dy_norm
+        return np.diff(self._centers_of_mass_y) * self._sampling_frequency * dy_norm
 
     def _calculate_sizes(self):
         _sizes = []
         _sizes_R = []
         _sizes_Z = []
-        for frame in range(len(self.polygon_of_predicted_blobs)):
-            mask = get_poly_mask(self.polygon_of_predicted_blobs[frame], 64, 64)
+        for frame in range(len(self._polygon_of_predicted_blobs)):
+            mask = get_poly_mask(self._polygon_of_predicted_blobs[frame], 64, 64)
             rows, cols = np.where(mask)
             size_R = np.max(rows) - np.min(rows)
             size_Z = np.max(cols) - np.min(cols)
-            _sizes.append(mask.sum())
-            _sizes_R.append(size_R*self._extract_dx())
-            _sizes_Z.append(size_Z*self._extract_dy())
+            _sizes.append(
+                mask.sum() * self._extract_dx() * self._extract_dy()
+            )  # size in m^2
+            _sizes_R.append(size_R * self._extract_dx())  # size in m
+            _sizes_Z.append(size_Z * self._extract_dy())  # size in m
         return _sizes, _sizes_R, _sizes_Z
 
     def _calculate_amplitudes(self):
@@ -73,14 +76,14 @@ class Blob:
         amplitudes = []
         for i, frame in enumerate(self.frames_of_appearance):
             single_frame_data = ds.frames.isel(time=frame).values
-            mask = get_poly_mask(self.polygon_of_predicted_blobs[i], 64, 64)
+            mask = get_poly_mask(self._polygon_of_predicted_blobs[i], 64, 64)
             blob_density = single_frame_data[mask.T]
             amplitudes.append(np.max(blob_density))
 
         return amplitudes
 
     def _load_raw_data(self):
-        return xr.load_dataset(f"{self.file_name}.nc")
+        return xr.load_dataset(f"{self._file_name}.nc")
 
     def _extract_sampling_frequency(self):
         ds = self._load_raw_data()
@@ -104,10 +107,27 @@ class Blob:
             self.sizes_Z = savgol_filter(self.sizes_Z, window_length, polyorder)
 
             self.velocities_R = savgol_filter(
-                self.velocities_R, window_length - 1, polyorder
+                self.velocities_R, window_length - 2, polyorder
             )
             self.velocities_Z = savgol_filter(
-                self.velocities_Z, window_length - 1, polyorder
+                self.velocities_Z, window_length - 2, polyorder
             )
         except Exception:
-            print("blob lifetime to short for savgol filter")
+            print(self.__repr__(), ": blob lifetime to short for savgol filter")
+
+    def remove_frames_close_to_borders(self, max_x=235, min_y=20, max_y=235):
+        for i in range(len(self.frames_of_appearance)):
+            if (
+                self._centers_of_mass_x[i] > max_x
+                or self._centers_of_mass_y[i] < min_y
+                or self._centers_of_mass_y[i] > max_y
+            ):
+                self.frames_of_appearance[i] = None
+                self.amplitudes[i] = None
+                self.sizes[i] = None
+                self.sizes_R[i] = None
+                self.sizes_Z[i] = None
+                with contextlib.suppress(Exception):
+                    self.velocities_R[i] = None
+                    self.velocities_Z[i] = None
+                self.life_time -= 1
