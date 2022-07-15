@@ -131,8 +131,8 @@ def estimate_blob_stats(args):
                     mask = get_poly_mask(points, polygon_pred, n_x, n_y)
                     masks = masks | mask
                     
-                    cm_r = (cx/n_x)*(np.max(r_highres) - np.min(r_highres)) + np.min(r_highres)
-                    cm_z = (cy/n_y)*(np.max(z_highres) - np.min(z_highres)) + np.min(z_highres)
+                    cm_r = (cx/(n_x-1))*(np.max(r_highres) - np.min(r_highres)) + np.min(r_highres)
+                    cm_z = (cy/(n_y-1))*(np.max(z_highres) - np.min(z_highres)) + np.min(z_highres)
                     idx_cm_r = np.argmin(np.abs(r_grid_frame[:,0] - cm_r))
                     idx_cm_z = np.argmin(np.abs(z_grid_frame[0,:] - cm_z))
                     slope = drdy[idx_cm_r, idx_cm_z] / drdx[idx_cm_r, idx_cm_z]
