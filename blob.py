@@ -20,7 +20,7 @@ class Blob:
         polygon_of_brightness_contours: List[Polygon],
         frames_of_appearance: List[int],
     ):
-        self._file_name = file_name.replace("_raft", "")
+        self._file_name = file_name
         self.blob_id = blob_id
         self._VIoU = VIoU
         self._centers_of_mass_x = centers_of_mass_x
@@ -32,7 +32,7 @@ class Blob:
         self._sampling_frequency = self._extract_sampling_frequency()
         self.velocities_R = self._calculate_velocity_R()
         self.velocities_Z = self._calculate_velocity_Z()
-        self.sizes, self.sizes_R, self.sizes_Z = self._calculate_sizes()
+        self.sizes, self.width_R, self.width_Z = self._calculate_sizes()
         self.amplitudes = self._calculate_amplitudes()
 
     def __repr__(self) -> str:
@@ -83,7 +83,7 @@ class Blob:
         return amplitudes
 
     def _load_raw_data(self):
-        return xr.load_dataset(f"{self._file_name}.nc")
+        return xr.load_dataset(self._file_name)
 
     def _extract_sampling_frequency(self):
         ds = self._load_raw_data()
@@ -103,8 +103,8 @@ class Blob:
         try:
             self.amplitudes = savgol_filter(self.amplitudes, window_length, polyorder)
             self.sizes = savgol_filter(self.sizes, window_length, polyorder)
-            self.sizes_R = savgol_filter(self.sizes_R, window_length, polyorder)
-            self.sizes_Z = savgol_filter(self.sizes_Z, window_length, polyorder)
+            self.width_R = savgol_filter(self.width_R, window_length, polyorder)
+            self.width_Z = savgol_filter(self.width_Z, window_length, polyorder)
 
             self.velocities_R = savgol_filter(
                 self.velocities_R, window_length - 2, polyorder
@@ -125,8 +125,8 @@ class Blob:
                 self.frames_of_appearance[i] = None
                 self.amplitudes[i] = None
                 self.sizes[i] = None
-                self.sizes_R[i] = None
-                self.sizes_Z[i] = None
+                self.width_R[i] = None
+                self.width_Z[i] = None
                 with contextlib.suppress(Exception):
                     self.velocities_R[i] = None
                     self.velocities_Z[i] = None
