@@ -34,6 +34,7 @@ class Blob:
         self.velocities_y = self._calculate_velocity_y()
         self.sizes, self.width_x, self.width_y = self._calculate_sizes()
         self.amplitudes = self._calculate_amplitudes()
+        self.velocities_R, self.velocities_Z = self._calculate_velocities_R_Z()
 
     def __repr__(self) -> str:
         return f"Blob with blob_id: {self.blob_id}"
@@ -53,6 +54,33 @@ class Blob:
             self._extract_dy() / 4
         )  # /4 because of reducing sampling from 256 to 64
         return np.diff(self._centers_of_mass_y) * self._sampling_frequency * dy_norm
+
+    def _find_center_of_mass_R_Z(self):
+        ds = self._load_raw_data()
+        x_interpol = (
+            64 - np.array(self._centers_of_mass_x) / 4
+        )  # x index is inverted in the raw data
+        y_interpol = np.array(self._centers_of_mass_y) / 4
+        R_values = []
+        Z_values = []
+        for i in range(len(x_interpol)):
+            R_values.append(
+                ds.R.interp(x=x_interpol[i], y=y_interpol[i], method="cubic").values
+            )
+            Z_values.append(
+                ds.Z.interp(x=x_interpol[i], y=y_interpol[i], method="cubic").values
+            )
+        return np.array(R_values), np.array(Z_values)
+
+    def _calculate_velocities_R_Z(self):
+        if self.blob_id != 0:
+            if self.life_time == 0:
+                velocity_R, velocity_Z = 0, 0
+            R_values, Z_values = self._find_center_of_mass_R_Z()
+            velocity_R = np.diff(R_values * 0.01) * self._sampling_frequency
+            velocity_Z = np.diff(Z_values * 0.01) * self._sampling_frequency
+            return velocity_R, velocity_Z
+        return 0, 0
 
     def _calculate_sizes(self):
         _sizes = []

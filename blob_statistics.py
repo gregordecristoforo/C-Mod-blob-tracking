@@ -28,17 +28,19 @@ for blob in blob_list:
 lifetimes = [blob.life_time for blob in blob_list]
 amplitudes = [blob.amplitudes for blob in blob_list]
 velocities_x = [blob.velocities_x for blob in blob_list]
+velocities_R = [blob.velocities_R for blob in blob_list]
 velocities_y = [blob.velocities_y for blob in blob_list]
+velocities_Z = [blob.velocities_Z for blob in blob_list]
 sizes = [blob.sizes for blob in blob_list]
 widths_x = [blob.width_x for blob in blob_list]
 widths_y = [blob.width_y for blob in blob_list]
 centers_of_mass_x = [blob._centers_of_mass_x[0] for blob in blob_list]
 
-
-# # centers_of_mass_xs = [blob.centers_of_mass_x for blob in blob_list]
-
 vx_max = [np.max(v) for v in velocities_x if len(v) > 0]
 vx_mean = [np.mean(v) for v in velocities_x if len(v) > 0]
+
+vR_max = [np.max(v) for v in velocities_R if len(v) > 0]
+vR_mean = [np.mean(v) for v in velocities_R if len(v) > 0]
 
 vy_max = [np.max(v) for v in velocities_y if len(v) > 0]
 vy_mean = [np.mean(v) for v in velocities_y if len(v) > 0]
@@ -55,9 +57,10 @@ width_R_mean = [np.mean(width_R) for width_R in widths_x if len(width_R) > 1]
 width_Z_max = [np.max(width_Z) for width_Z in widths_y if len(width_Z) > 1]
 width_Z_mean = [np.mean(width_Z) for width_Z in widths_y if len(width_Z) > 1]
 
-print(np.mean(centers_of_mass_x) / 255 * 0.06)
+# print(np.mean(centers_of_mass_x) / 255 * 0.06)
 # plt.scatter(size_max, vx_max)
 # plt.show()
-print(np.mean(vy_mean))
-plt.hist(vy_mean, bins=64)
+# print(np.mean(vy_mean))
+plt.hist(vx_mean, bins=64)
+plt.hist(vR_mean, bins=64)
 plt.show()
