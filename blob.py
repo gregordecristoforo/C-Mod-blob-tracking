@@ -30,15 +30,15 @@ class Blob:
         self.frames_of_appearance = frames_of_appearance
         self.life_time = len(self._VIoU)
         self._sampling_frequency = self._extract_sampling_frequency()
-        self.velocities_R = self._calculate_velocity_R()
-        self.velocities_Z = self._calculate_velocity_Z()
-        self.sizes, self.width_R, self.width_Z = self._calculate_sizes()
+        self.velocities_x = self._calculate_velocity_x()
+        self.velocities_y = self._calculate_velocity_y()
+        self.sizes, self.width_x, self.width_y = self._calculate_sizes()
         self.amplitudes = self._calculate_amplitudes()
 
     def __repr__(self) -> str:
         return f"Blob with blob_id: {self.blob_id}"
 
-    def _calculate_velocity_R(self):
+    def _calculate_velocity_x(self):
         if self.life_time == 0:
             return 0
         dx_norm = (
@@ -46,7 +46,7 @@ class Blob:
         )  # /4 because of reducing sampling from 256 to 64
         return np.diff(self._centers_of_mass_x) * self._sampling_frequency * dx_norm
 
-    def _calculate_velocity_Z(self):
+    def _calculate_velocity_y(self):
         if self.life_time == 0:
             return 0
         dy_norm = (
@@ -56,19 +56,19 @@ class Blob:
 
     def _calculate_sizes(self):
         _sizes = []
-        _sizes_R = []
-        _sizes_Z = []
+        _sizes_x = []
+        _sizes_y = []
         for frame in range(len(self._polygon_of_predicted_blobs)):
             mask = get_poly_mask(self._polygon_of_predicted_blobs[frame], 64, 64)
             rows, cols = np.where(mask)
-            size_R = np.max(rows) - np.min(rows)
-            size_Z = np.max(cols) - np.min(cols)
+            size_x = np.max(rows) - np.min(rows)
+            size_y = np.max(cols) - np.min(cols)
             _sizes.append(
                 mask.sum() * self._extract_dx() * self._extract_dy()
             )  # size in m^2
-            _sizes_R.append(size_R * self._extract_dx())  # size in m
-            _sizes_Z.append(size_Z * self._extract_dy())  # size in m
-        return _sizes, _sizes_R, _sizes_Z
+            _sizes_x.append(size_x * self._extract_dx())  # size in m
+            _sizes_y.append(size_y * self._extract_dy())  # size in m
+        return _sizes, _sizes_x, _sizes_y
 
     def _calculate_amplitudes(self):
         ds = self._load_raw_data()
@@ -103,14 +103,14 @@ class Blob:
         try:
             self.amplitudes = savgol_filter(self.amplitudes, window_length, polyorder)
             self.sizes = savgol_filter(self.sizes, window_length, polyorder)
-            self.width_R = savgol_filter(self.width_R, window_length, polyorder)
-            self.width_Z = savgol_filter(self.width_Z, window_length, polyorder)
+            self.width_x = savgol_filter(self.width_x, window_length, polyorder)
+            self.width_y = savgol_filter(self.width_y, window_length, polyorder)
 
-            self.velocities_R = savgol_filter(
-                self.velocities_R, window_length - 2, polyorder
+            self.velocities_x = savgol_filter(
+                self.velocities_x, window_length - 2, polyorder
             )
-            self.velocities_Z = savgol_filter(
-                self.velocities_Z, window_length - 2, polyorder
+            self.velocities_y = savgol_filter(
+                self.velocities_y, window_length - 2, polyorder
             )
         except Exception:
             print(self.__repr__(), ": blob lifetime to short for savgol filter")
@@ -125,9 +125,9 @@ class Blob:
                 self.frames_of_appearance[i] = None
                 self.amplitudes[i] = None
                 self.sizes[i] = None
-                self.width_R[i] = None
-                self.width_Z[i] = None
+                self.width_x[i] = None
+                self.width_y[i] = None
                 with contextlib.suppress(Exception):
-                    self.velocities_R[i] = None
-                    self.velocities_Z[i] = None
+                    self.velocities_x[i] = None
+                    self.velocities_y[i] = None
                 self.life_time -= 1
