@@ -35,7 +35,7 @@ class Blob:
         self.sizes, self.width_x, self.width_y = self._calculate_sizes()
         self.amplitudes = self._calculate_amplitudes()
         self.velocities_R, self.velocities_Z = self._calculate_velocities_R_Z()
-        self._calculate_sizes_R_Z()
+        self.width_R, self.width_Z = self._calculate_sizes_R_Z()
 
     def __repr__(self) -> str:
         return f"Blob with blob_id: {self.blob_id}"
@@ -102,17 +102,23 @@ class Blob:
     def _calculate_sizes_R_Z(self):
 
         ds = self._load_raw_data()
-        # for i, frame in enumerate(self.frames_of_appearance):
-        #     ds['frames'] = (ds.frames - ds.frames.mean(dim='time')) / ds.frames.std(dim='time')
-        #     R_values = ds.R.values
-        #     mask = get_poly_mask(self._polygon_of_predicted_blobs[i], 64, 64)
-        #     R_of_blob = R_values[mask.T]
-        #     ds.frames.isel(time=i).plot()
-        #     plt.title(frame)
-        #     plt.contour(mask.T)
-        #     plt.show()
-        #     print(R_of_blob)
-        #     print(self._centers_of_mass_x, self._centers_of_mass_y)
+
+        _sizes_R = []
+        _sizes_Z = []
+        for i in range(len(self.frames_of_appearance)):
+            frame = self.frames_of_appearance[i]
+            R_grid = ds.R.values
+            Z_grid = ds.Z.values
+            R_grid = np.flip(R_grid, axis=(1))  # orientation different to frames
+            R_grid = np.flip(R_grid, axis=(1))  # orientation different to frames
+            mask = get_poly_mask(self._polygon_of_predicted_blobs[i], 64, 64)
+            R_values = R_grid[mask.T]
+            Z_values = Z_grid[mask.T]
+            size_R = (np.max(R_values) - np.min(R_values)) * 0.01  # in m
+            size_Z = (np.max(Z_values) - np.min(Z_values)) * 0.01  # in m
+            _sizes_R.append(size_R)
+            _sizes_Z.append(size_Z)
+        return _sizes_R, _sizes_Z
 
     def _calculate_amplitudes(self):
         ds = self._load_raw_data()
@@ -150,6 +156,8 @@ class Blob:
             self.sizes = savgol_filter(self.sizes, window_length, polyorder)
             self.width_x = savgol_filter(self.width_x, window_length, polyorder)
             self.width_y = savgol_filter(self.width_y, window_length, polyorder)
+            self.width_R = savgol_filter(self.width_R, window_length, polyorder)
+            self.width_Z = savgol_filter(self.width_Z, window_length, polyorder)
 
             self.velocities_x = savgol_filter(
                 self.velocities_x, window_length - 2, polyorder
