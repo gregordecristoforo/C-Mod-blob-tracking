@@ -35,6 +35,7 @@ class Blob:
         self.sizes, self.width_x, self.width_y = self._calculate_sizes()
         self.amplitudes = self._calculate_amplitudes()
         self.velocities_R, self.velocities_Z = self._calculate_velocities_R_Z()
+        self._calculate_sizes_R_Z()
 
     def __repr__(self) -> str:
         return f"Blob with blob_id: {self.blob_id}"
@@ -98,11 +99,27 @@ class Blob:
             _sizes_y.append(size_y * self._extract_dy())  # size in m
         return _sizes, _sizes_x, _sizes_y
 
+    def _calculate_sizes_R_Z(self):
+
+        ds = self._load_raw_data()
+        # for i, frame in enumerate(self.frames_of_appearance):
+        #     ds['frames'] = (ds.frames - ds.frames.mean(dim='time')) / ds.frames.std(dim='time')
+        #     R_values = ds.R.values
+        #     mask = get_poly_mask(self._polygon_of_predicted_blobs[i], 64, 64)
+        #     R_of_blob = R_values[mask.T]
+        #     ds.frames.isel(time=i).plot()
+        #     plt.title(frame)
+        #     plt.contour(mask.T)
+        #     plt.show()
+        #     print(R_of_blob)
+        #     print(self._centers_of_mass_x, self._centers_of_mass_y)
+
     def _calculate_amplitudes(self):
         ds = self._load_raw_data()
 
         amplitudes = []
-        for i, frame in enumerate(self.frames_of_appearance):
+        for i in range(len(self.frames_of_appearance)):
+            frame = self.frames_of_appearance[i]
             single_frame_data = ds.frames.isel(time=frame).values
             mask = get_poly_mask(self._polygon_of_predicted_blobs[i], 64, 64)
             blob_density = single_frame_data[mask.T]
