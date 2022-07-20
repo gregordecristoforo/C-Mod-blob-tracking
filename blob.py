@@ -35,7 +35,6 @@ class Blob:
         self.amplitudes = self._calculate_amplitudes()
         self.velocities_R, self.velocities_Z = self._calculate_velocities_R_Z()
         self.width_R, self.width_Z = self._calculate_sizes_R_Z()
-        self._remove_blobs_outside_of_SOL()
 
     def __repr__(self) -> str:
         return f"Blob with blob_id: {self.blob_id}"
@@ -185,7 +184,7 @@ class Blob:
                     self.velocities_y[i] = None
                 self.life_time -= 1
 
-    def _remove_blobs_outside_of_SOL(self):
+    def remove_blobs_outside_of_SOL(self):
         R_LCFS = np.load("data/R_LCFS.npy") * 100
         Z_LCFS = np.load("data/Z_LCFS.npy") * 100
         R_LIM = np.load("data/R_LIM.npy") * 100
