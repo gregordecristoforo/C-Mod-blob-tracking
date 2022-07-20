@@ -6,8 +6,7 @@ from polygon_to_mask import get_poly_mask
 import xarray as xr
 from scipy.signal import savgol_filter
 import matplotlib.pyplot as plt
-
-
+from scipy import interpolate
 class Blob:
     def __init__(
         self,
@@ -36,6 +35,7 @@ class Blob:
         self.amplitudes = self._calculate_amplitudes()
         self.velocities_R, self.velocities_Z = self._calculate_velocities_R_Z()
         self.width_R, self.width_Z = self._calculate_sizes_R_Z()
+        self._remove_blobs_outside_of_SOL()
 
     def __repr__(self) -> str:
         return f"Blob with blob_id: {self.blob_id}"
@@ -183,4 +183,41 @@ class Blob:
                 with contextlib.suppress(Exception):
                     self.velocities_x[i] = None
                     self.velocities_y[i] = None
+                self.life_time -= 1
+
+    def _remove_blobs_outside_of_SOL(self):
+        R_LCFS = np.load("data/R_LCFS.npy") * 100
+        Z_LCFS = np.load("data/Z_LCFS.npy") * 100
+        R_LIM = np.load("data/R_LIM.npy") * 100
+        Z_LIM = np.load("data/Z_LIM.npy") * 100
+        
+        f_LCFS = interpolate.interp1d(
+            Z_LCFS,
+            R_LCFS,
+            kind="cubic",
+        )
+        f_LIM = interpolate.interp1d(
+            Z_LIM,
+            R_LIM,
+            kind="cubic",
+        )
+        R_values, Z_values = self._find_center_of_mass_R_Z()
+
+        for i in range(len(R_values)):
+            local_R_LCFS = f_LCFS(Z_values[i])
+            local_R_LIM = f_LIM(Z_values[i])
+            
+            if R_values[i] < local_R_LCFS or R_values[i] > local_R_LIM:
+                self.frames_of_appearance[i] = None
+                self.amplitudes[i] = None
+                self.sizes[i] = None
+                self.width_x[i] = None
+                self.width_y[i] = None
+                self.width_R[i] = None
+                self.width_Z[i] = None
+                with contextlib.suppress(Exception):
+                    self.velocities_x[i] = None
+                    self.velocities_y[i] = None
+                    self.velocities_R[i] = None
+                    self.velocities_Z[i] = None
                 self.life_time -= 1
