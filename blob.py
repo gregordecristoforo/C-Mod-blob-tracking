@@ -5,8 +5,8 @@ import numpy as np
 from polygon_to_mask import get_poly_mask
 import xarray as xr
 from scipy.signal import savgol_filter
-import matplotlib.pyplot as plt
 from scipy import interpolate
+
 class Blob:
     def __init__(
         self,

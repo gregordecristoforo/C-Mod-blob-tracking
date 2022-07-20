@@ -1,30 +1,18 @@
-from blob import Blob
 import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 
 
 blob_list = pickle.load(open("data/1091216028_1.45_raft_blobs.pickle", "rb"))
-# blob_list = pickle.load(open("data/gregor_upsampling_method_blobs.pickle", "rb"))
 
 blob_ids = [blob.blob_id for blob in blob_list]
 
+lifetimes = [blob.life_time for blob in blob_list]
+
 for blob in blob_list:
-    # plt.plot(blob.velocities_R)
     blob.smoothen_all_parameters()
-    # blob.remove_frames_close_to_borders()
-    # plt.plot(blob.velocities_R)
-    # plt.show()
-
-    # plt.title(blob.blob_id)
-    # plt.plot(blob.sizes_Z)
-    # blob.smoothen_all_parameters()
-    # plt.plot(blob.sizes_Z)
-    # plt.show()
-# blob_list = pickle.load(open("data/new_blobs.pickle", "rb"))
-# print(blob_list[0].amplitudes)
-
-
+    blob.remove_blobs_outside_of_SOL()
+    
 lifetimes = [blob.life_time for blob in blob_list]
 amplitudes = [blob.amplitudes for blob in blob_list]
 velocities_x = [blob.velocities_x for blob in blob_list]
@@ -66,10 +54,6 @@ width_Z_max = [np.max(width_Z) for width_Z in widths_Z if len(width_Z) > 1]
 width_Z_mean = [np.mean(width_Z) for width_Z in widths_Z if len(width_Z) > 1]
 
 
-# print(np.mean(centers_of_mass_x) / 255 * 0.06)
-# plt.scatter(size_max, vx_max)
-# plt.show()
-# print(np.mean(vy_mean))
 plt.hist(width_R_mean, bins=64)
 plt.hist(width_x_mean, bins=64)
 plt.show()
