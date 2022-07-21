@@ -3,16 +3,24 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-blob_list = pickle.load(open("data/1091216028_1.45_raft_blobs.pickle", "rb"))
+blob_list = pickle.load(
+    open("data/1091216028_full_data/1091216028_all_blobs.pickle", "rb")
+)
+
+# blob_list = pickle.load(open("data/1091216028_full_data/1091216028_1.4_01_raft_blobs.pickle", "rb"))
+# blob_list = pickle.load(open("data/1091216028_full_data/1091216028_1.4_02_raft_blobs.pickle", "rb"))
+# blob_list = pickle.load(open("data/1091216028_1.45_raft_blobs.pickle", "rb"))
+print(blob_list)
 
 blob_ids = [blob.blob_id for blob in blob_list]
+print(f"Number of blobs: {len(blob_ids)}")
 
 lifetimes = [blob.life_time for blob in blob_list]
 
 for blob in blob_list:
     blob.smoothen_all_parameters()
     blob.remove_blobs_outside_of_SOL()
-    
+
 lifetimes = [blob.life_time for blob in blob_list]
 amplitudes = [blob.amplitudes for blob in blob_list]
 velocities_x = [blob.velocities_x for blob in blob_list]

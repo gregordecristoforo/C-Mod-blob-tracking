@@ -1,4 +1,5 @@
 import contextlib
+import matplotlib.pyplot as plt
 from shapely.geometry import Polygon
 from typing import List
 import numpy as np
@@ -6,6 +7,7 @@ from polygon_to_mask import get_poly_mask
 import xarray as xr
 from scipy.signal import savgol_filter
 from scipy import interpolate
+
 
 class Blob:
     def __init__(
@@ -35,9 +37,11 @@ class Blob:
         self.amplitudes = self._calculate_amplitudes()
         self.velocities_R, self.velocities_Z = self._calculate_velocities_R_Z()
         self.width_R, self.width_Z = self._calculate_sizes_R_Z()
+        # self.plot_single_frames() # useful for debugging
+        self._remove_unnecessary_properties()
 
     def __repr__(self) -> str:
-        return f"Blob with blob_id: {self.blob_id}"
+        return f"Blob with life_time: {self.life_time}"
 
     def _calculate_velocity_x(self):
         if self.life_time == 0:
@@ -89,8 +93,12 @@ class Blob:
         for frame in range(len(self._polygon_of_predicted_blobs)):
             mask = get_poly_mask(self._polygon_of_predicted_blobs[frame], 64, 64)
             rows, cols = np.where(mask)
-            size_x = np.max(rows) - np.min(rows)
-            size_y = np.max(cols) - np.min(cols)
+            try:
+                size_x = np.max(rows) - np.min(rows)
+                size_y = np.max(cols) - np.min(cols)
+            except Exception:
+                size_x = 0
+                size_y = 0
             _sizes.append(
                 mask.sum() * self._extract_dx() * self._extract_dy()
             )  # size in m^2
@@ -105,7 +113,6 @@ class Blob:
         _sizes_R = []
         _sizes_Z = []
         for i in range(len(self.frames_of_appearance)):
-            frame = self.frames_of_appearance[i]
             R_grid = ds.R.values
             Z_grid = ds.Z.values
             R_grid = np.flip(R_grid, axis=(1))  # orientation different to frames
@@ -113,8 +120,12 @@ class Blob:
             mask = get_poly_mask(self._polygon_of_predicted_blobs[i], 64, 64)
             R_values = R_grid[mask.T]
             Z_values = Z_grid[mask.T]
-            size_R = (np.max(R_values) - np.min(R_values)) * 0.01  # in m
-            size_Z = (np.max(Z_values) - np.min(Z_values)) * 0.01  # in m
+            try:
+                size_R = (np.max(R_values) - np.min(R_values)) * 0.01  # in m
+                size_Z = (np.max(Z_values) - np.min(Z_values)) * 0.01  # in m
+            except Exception:
+                size_R = 0
+                size_Z = 0
             _sizes_R.append(size_R)
             _sizes_Z.append(size_Z)
         return _sizes_R, _sizes_Z
@@ -128,9 +139,26 @@ class Blob:
             single_frame_data = ds.frames.isel(time=frame).values
             mask = get_poly_mask(self._polygon_of_predicted_blobs[i], 64, 64)
             blob_density = single_frame_data[mask.T]
-            amplitudes.append(np.max(blob_density))
+            try:
+                amplitudes.append(np.max(blob_density))
+            except Exception:
+                amplitudes.append(0)
 
         return amplitudes
+
+    def plot_single_frames(self):
+        ds = self._load_raw_data()
+
+        for i in range(len(self.frames_of_appearance)):
+            frame = self.frames_of_appearance[i]
+            single_frame_data = ds.frames.isel(time=frame).values
+            mask = get_poly_mask(self._polygon_of_predicted_blobs[i], 64, 64)
+
+            plt.contourf(single_frame_data)
+            plt.contour(mask.T)
+            plt.show()
+
+        return
 
     def _load_raw_data(self):
         return xr.load_dataset(self._file_name)
@@ -189,23 +217,15 @@ class Blob:
         Z_LCFS = np.load("data/Z_LCFS.npy") * 100
         R_LIM = np.load("data/R_LIM.npy") * 100
         Z_LIM = np.load("data/Z_LIM.npy") * 100
-        
-        f_LCFS = interpolate.interp1d(
-            Z_LCFS,
-            R_LCFS,
-            kind="cubic",
-        )
-        f_LIM = interpolate.interp1d(
-            Z_LIM,
-            R_LIM,
-            kind="cubic",
-        )
+
+        f_LCFS = interpolate.interp1d(Z_LCFS, R_LCFS, kind="cubic",)
+        f_LIM = interpolate.interp1d(Z_LIM, R_LIM, kind="cubic",)
         R_values, Z_values = self._find_center_of_mass_R_Z()
 
         for i in range(len(R_values)):
             local_R_LCFS = f_LCFS(Z_values[i])
             local_R_LIM = f_LIM(Z_values[i])
-            
+
             if R_values[i] < local_R_LCFS or R_values[i] > local_R_LIM:
                 self.frames_of_appearance[i] = None
                 self.amplitudes[i] = None
@@ -220,3 +240,8 @@ class Blob:
                     self.velocities_R[i] = None
                     self.velocities_Z[i] = None
                 self.life_time -= 1
+
+    def _remove_unnecessary_properties(self):
+        self._VIoU = None
+        self._polygon_of_predicted_blobs = None
+        self._polygon_of_brightness_contours = None
