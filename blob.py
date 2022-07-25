@@ -41,7 +41,8 @@ class Blob:
         self._remove_unnecessary_properties()
 
     def __repr__(self) -> str:
-        return f"Blob with life_time: {self.life_time}"
+        return (f"Blob id: {self.blob_id} \n"
+        "most important variables: life_time [frames], velocities_R [m/s], velocities_Z [m/s], width_R [m], width_Z [m], sizes [m^3], amplitudes [counts]")
 
     def _calculate_velocity_x(self):
         if self.life_time == 0:
