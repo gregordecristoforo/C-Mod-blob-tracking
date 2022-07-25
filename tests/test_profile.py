@@ -4,12 +4,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
 
+
 def create_test_dataset():
     ds = xr.open_dataset("data/old_data/short_dataset_coordinates_included.nc")
-    new_var = np.tile(ds.x.values, (ds.y.size,1))
-    new_var = np.tile(new_var, (ds.time.size,1,1))
-    ds['test_frames'] = (("time","y","x"),new_var)
+    new_var = np.tile(ds.x.values, (ds.y.size, 1))
+    new_var = np.tile(new_var, (ds.time.size, 1, 1))
+    ds["test_frames"] = (("time", "y", "x"), new_var)
     return ds
+
 
 def get_SOL_mask(ds, R_LCFS, Z_LCFS, R_LIM, Z_LIM):
     SOL_mask = np.zeros((64, 64))
@@ -34,7 +36,8 @@ def isolate_SOL(ds):
     SOL_mask = get_SOL_mask(ds, R_LCFS, Z_LCFS, R_LIM, Z_LIM)
     ds["SOL_density"] = xr.where(SOL_mask, ds.test_frames, 0)
     return ds
-    
+
+
 def plot_test_profile(ds):
     mean_values = ds.SOL_density.mean(dim=("time")).values
     mean_values = mean_values.flatten()
