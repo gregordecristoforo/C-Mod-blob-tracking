@@ -11,7 +11,8 @@ import click
     help="raft output file.",
 )
 @click.option("--raw_data", default="data/1091216028_1.45.nc", help="raw data file.")
-def create_blob_list(raft_output, raw_data):
+@click.option("--first_frame", default=0, help="first frame in nc dataset.")
+def create_blob_list(raft_output, raw_data, first_frame):
     data = pickle.load(open(raft_output, "rb"))
 
     blob_ids = []
@@ -77,6 +78,7 @@ def create_blob_list(raft_output, raw_data):
                 temp_frames_of_appearance,
             )
             list_of_blobs.append(blob)
+            print(f"blob {i} of {len(blob_ids)} processed")
 
             temp_VIoUs = []
             temp_centers_of_mass_x = []
@@ -93,7 +95,7 @@ def create_blob_list(raft_output, raw_data):
             temp_polygon_of_brightness_contours.append(
                 polygon_of_brightness_contours[i]
             )
-            temp_frames_of_appearance.append(frames_of_appearance[i])
+            temp_frames_of_appearance.append(frames_of_appearance[i] + first_frame)
         last_blob_id = blob_ids[i]
 
     list_of_blobs.pop(0)
