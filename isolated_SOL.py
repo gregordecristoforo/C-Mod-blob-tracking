@@ -2,43 +2,58 @@ import itertools
 import xarray as xr
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy import interpolate
+import pickle
+from polygon_to_mask import get_poly_mask
+from mask_functions import (
+    isolate_SOL,
+    subtract_background,
+    calculate_blob_density_small_ds,
+    calculate_blob_density_large_ds,
+)
 
-ds = xr.load_dataset("data/short_dataset_coordinates_included.nc")
+ds = xr.load_dataset("data/old_data/short_dataset_coordinates_included.nc")
+ds = subtract_background(ds)
+ds = isolate_SOL(ds)
 
-R_LCFS = np.load("data/R_LCFS.npy") * 100
-Z_LCFS = np.load("data/Z_LCFS.npy") * 100
-R_LIM = np.load("data/R_LIM.npy") * 100
-Z_LIM = np.load("data/Z_LIM.npy") * 100
+ds_full = xr.load_dataset("data/1091216028_full_data/1091216028.nc")
+ds_full = subtract_background(ds_full)
+ds_full = isolate_SOL(ds_full)
 
-
-def get_SOL_mask(ds, R_LCFS, Z_LCFS, R_LIM, Z_LIM):
-    SOL_mask = np.zeros((64, 64))
-    f_LCFS = interpolate.interp1d(
-            Z_LCFS,
-            R_LCFS,
-            kind="cubic",
-        )
-    f_LIM = interpolate.interp1d(
-            Z_LIM,
-            R_LIM,
-            kind="cubic",
-        )
-        
-    for i, j in itertools.product(range(64), range(64)):
-        local_R_LCFS = f_LCFS(ds.Z.values[j,i])
-        local_R_LIM = f_LIM(ds.Z.values[j,i])
-
-        if local_R_LCFS < ds.R.values[j,i] and local_R_LIM > ds.R.values[j,i]:
-            SOL_mask[j,i] = 1
-    return SOL_mask
+ds = calculate_blob_density_small_ds(ds)
+ds_full = calculate_blob_density_large_ds(ds_full)
 
 
-SOL_mask = get_SOL_mask(ds, R_LCFS, Z_LCFS, R_LIM, Z_LIM)
+def extract_profiles(ds, variable):
+    density_values = ds[variable].mean(dim="time").values
+    density_values = density_values.flatten()
+    Rs = ds.R.values.flatten()
+    return Rs, density_values
 
-ds["SOL_density"] = xr.where(SOL_mask, ds.frames, 0)
-ds.SOL_density.mean(dim=("time", "y")).plot()
-ds.frames.mean(dim=("time", "y")).plot()
 
+# blob_values = ds.blob_density.mean(dim=("time")).values
+# blob_values = blob_values.flatten()
+
+# mean_values = ds.SOL_density.mean(dim=("time")).values
+# mean_values = mean_values.flatten()
+
+# mean_values_full = ds_full.SOL_density.mean(dim=("time")).values
+# mean_values_full = mean_values_full.flatten()
+
+# Rs_blobs = np.flip(ds.R.values, axis=(1))  # orientation different to frames
+
+# Rs = ds.R.values.flatten()
+# Rs_blobs = Rs_blobs.flatten()
+
+# plt.scatter(extract_profiles(ds, 'frames'), label='SOL_density')
+Rs, mean_values = extract_profiles(ds, "SOL_density")
+plt.scatter(Rs, mean_values, label="SOL_density")
+Rs, mean_values_full = extract_profiles(ds_full, "SOL_density")
+plt.scatter(Rs, mean_values_full, label="SOL_density")
+Rs, blob_values = extract_profiles(ds, "blob_density")
+plt.scatter(Rs, blob_values, label="blob_density")
+
+Rs, blob_values = extract_profiles(ds_full, "blob_density")
+plt.scatter(Rs, blob_values, label="blob_density")
+
+plt.legend()
 plt.show()
-
