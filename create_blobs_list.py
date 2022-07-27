@@ -106,3 +106,35 @@ def create_blob_list(raft_output, raw_data, first_frame):
 
 if __name__ == "__main__":
     create_blob_list()
+    # file_index = [
+    #     "01",
+    #     "02",
+    #     "03",
+    #     "04",
+    #     "05",
+    #     "06",
+    #     "07",
+    #     "08",
+    #     "09",
+    #     "10",
+    #     "11",
+    #     "12",
+    #     "13",
+    #     "14",
+    #     "17",
+    #     "18",
+    #     "19",
+    #     "20",
+    #     "21",
+    #     "22",
+    #     "23",
+    #     "24",
+    #     "25",
+    # ]
+    # for blob_file in file_index:
+    #     create_blob_list(
+    #         raft_output=f"data/1091216028_full_data/1091216028_1.4_{blob_file}_raft.pickle",
+    #         raw_data="data/1091216028_full_data/1091216028.nc",
+    #         first_frame=(int(blob_file) - 1) * 2000,
+    #     )
+    #     print(f"\n blob file {blob_file} processed\n")

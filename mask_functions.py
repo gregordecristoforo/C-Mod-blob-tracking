@@ -75,6 +75,29 @@ def calculate_blob_density_small_ds(ds):
     return ds
 
 
+def calculate_blob_density_low_threshold(ds):
+    blob_list = pickle.load(
+        open("data/1091216028_low_threshold/low_threshold_raft_blobs.pickle", "rb")
+    )
+    ds["blob_density_low_threshold"] = xr.zeros_like(ds.frames)
+    for blob in blob_list:
+        for i in range(len(blob.frames_of_appearance)):
+            frame = blob.frames_of_appearance[i]
+            single_frame_data = ds.frames.isel(time=frame).values
+            mask = get_poly_mask(blob._polygon_of_predicted_blobs[i], 64, 64)
+
+            blob_single_frame = np.where(mask.T, single_frame_data, 0)
+
+            blob_single_frame = np.flip(
+                blob_single_frame, axis=(1)
+            )  # orientation different to frames
+
+            ds["blob_density_low_threshold"].isel(
+                time=frame
+            ).values += blob_single_frame
+    return ds
+
+
 def calculate_blob_density_large_ds(ds):
     ds["blob_density"] = xr.zeros_like(ds.frames)
 
@@ -111,7 +134,6 @@ def calculate_blob_density_large_ds(ds):
             )
         )
         for blob in blob_list:
-            print(blob._polygon_of_predicted_blobs)
             for i in range(len(blob.frames_of_appearance)):
                 frame = blob.frames_of_appearance[i]
                 single_frame_data = ds.frames.isel(time=frame).values
@@ -135,3 +157,10 @@ def calculate_blob_density_large_ds(ds):
 
                 ds["blob_density"].isel(time=frame).values += blob_single_frame
     return ds
+
+
+def extract_profiles(ds, variable):
+    density_values = ds[variable].mean(dim="time").values
+    density_values = density_values.flatten()
+    Rs = ds.R.values.flatten()
+    return Rs, density_values
