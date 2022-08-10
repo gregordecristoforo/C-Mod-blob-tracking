@@ -5,6 +5,7 @@ import numpy as np
 from scipy import interpolate
 import pickle
 from polygon_to_mask import get_poly_mask
+import shapely.geometry as geom
 
 
 def get_SOL_mask(ds, R_LCFS, Z_LCFS, R_LIM, Z_LIM):
@@ -163,4 +164,16 @@ def extract_profiles(ds, variable):
     density_values = ds[variable].mean(dim="time").values
     density_values = density_values.flatten()
     Rs = ds.R.values.flatten()
-    return Rs, density_values
+    Zs = ds.Z.values.flatten()
+    LCFS_coords = np.loadtxt("data/LCFS_interpolated.txt")
+    LIM_coords = np.loadtxt("data/LIM_interpolated.txt")
+    LCFS = geom.LineString(LCFS_coords)
+    LIM = geom.LineString(LIM_coords)
+    rhos = []
+    for i in range(len(Rs)):
+        point = geom.Point(Rs[i] * 0.01, Zs[i] * 0.01)  # convert to m
+        LCFS_distance = point.distance(LCFS)
+        LIM_distance = point.distance(LIM)
+        rho = LCFS_distance / (LCFS_distance + LIM_distance)
+        rhos.append(rho)
+    return rhos, density_values
