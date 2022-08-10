@@ -7,6 +7,7 @@ from polygon_to_mask import get_poly_mask
 import xarray as xr
 from scipy.signal import savgol_filter
 from scipy import interpolate
+import shapely.geometry as geom
 
 
 class Blob:
@@ -37,7 +38,10 @@ class Blob:
         self.amplitudes = self._calculate_amplitudes()
         self.velocities_R, self.velocities_Z = self._calculate_velocities_R_Z()
         self.width_R, self.width_Z = self._calculate_sizes_R_Z()
+        self.rhos = self._calculate_rho_values()
+        self.velocity_rho = self._calculate_velocity_rho()
         # self.plot_single_frames() # useful for debugging
+        self.remove_blobs_outside_of_SOL()
         self._remove_unnecessary_properties()
 
     def __repr__(self) -> str:
@@ -237,6 +241,7 @@ class Blob:
                 self.width_y[i] = None
                 self.width_R[i] = None
                 self.width_Z[i] = None
+                self.rhos[i] = None
                 with contextlib.suppress(Exception):
                     self.velocities_x[i] = None
                     self.velocities_y[i] = None
@@ -244,7 +249,28 @@ class Blob:
                     self.velocities_Z[i] = None
                 self.life_time -= 1
 
+    def _calculate_rho_values(self):
+        LCFS_coords = np.loadtxt("data/LCFS_interpolated.txt")
+        LIM_coords = np.loadtxt("data/LIM_interpolated.txt")
+
+        LCFS = geom.LineString(LCFS_coords)
+        LIM = geom.LineString(LIM_coords)
+        rhos = []
+
+        R_values, Z_values = self._find_center_of_mass_R_Z()
+        for R, Z in zip(R_values, Z_values):
+            point = geom.Point(R * 0.01, Z * 0.01)  # convert to m
+            LCFS_distance = point.distance(LCFS)
+            LIM_distance = point.distance(LIM)
+            rho = LCFS_distance / (LCFS_distance + LIM_distance)
+            rhos.append(rho)
+        return rhos
+
+    def _calculate_velocity_rho(self):
+        if self.life_time == 0:
+            return 0
+        return np.diff(self.rhos) * self._sampling_frequency
+
     def _remove_unnecessary_properties(self):
         self._VIoU = None
-        self._polygon_of_predicted_blobs = None
         self._polygon_of_brightness_contours = None
