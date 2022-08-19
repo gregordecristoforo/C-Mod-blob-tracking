@@ -8,6 +8,7 @@ import xarray as xr
 from scipy.signal import savgol_filter
 from scipy import interpolate
 import shapely.geometry as geom
+from shapely.ops import nearest_points
 
 
 class Blob:
@@ -38,7 +39,7 @@ class Blob:
         self.amplitudes = self._calculate_amplitudes()
         self.velocities_R, self.velocities_Z = self._calculate_velocities_R_Z()
         self.width_R, self.width_Z = self._calculate_sizes_R_Z()
-        self.rhos = self._calculate_rho_values()
+        self.rhos, self.poloidal_positions = self._calculate_rho_poloidal_values()
         self.velocity_rho = self._calculate_velocity_rho()
         # self.plot_single_frames() # useful for debugging
         self.remove_blobs_outside_of_SOL()
@@ -249,22 +250,49 @@ class Blob:
                     self.velocities_Z[i] = None
                 self.life_time -= 1
 
-    def _calculate_rho_values(self):
+    def _calculate_rho_poloidal_values(self):
         LCFS_coords = np.loadtxt("data/LCFS_interpolated.txt")
         LIM_coords = np.loadtxt("data/LIM_interpolated.txt")
 
         LCFS = geom.LineString(LCFS_coords)
         LIM = geom.LineString(LIM_coords)
         rhos = []
+        poloidal_positions = []
 
         R_values, Z_values = self._find_center_of_mass_R_Z()
         for R, Z in zip(R_values, Z_values):
             point = geom.Point(R * 0.01, Z * 0.01)  # convert to m
-            LCFS_distance = point.distance(LCFS)
-            LIM_distance = point.distance(LIM)
-            rho = LCFS_distance / (LCFS_distance + LIM_distance)
+            rho = self._calculate_rho(LCFS, LIM, point)
             rhos.append(rho)
-        return rhos
+            poloidal_position = nearest_points(LCFS, point)
+            poloidal_positions.append(poloidal_position)
+        return rhos, poloidal_positions
+
+    def _calculate_rho(self, LCFS, LIM, point):
+        nearest_point_on_LCFS, _ = nearest_points(LCFS, point)
+        nearest_point_on_LIM, _ = nearest_points(LIM, point)
+        LCFS_distance = point.distance(LCFS)
+        LIM_distance = point.distance(LIM)
+
+        if nearest_point_on_LCFS.x > point.x:
+            """blob inside LCFS"""
+            rho = -LCFS_distance / (LIM_distance - LCFS_distance)
+        elif nearest_point_on_LCFS.x < point.x and nearest_point_on_LIM.x > point.x:
+            """blob in SOL"""
+            rho = LCFS_distance / (LIM_distance + LCFS_distance)
+        elif nearest_point_on_LIM.x < point.x:
+            """blob in limiter shadow"""
+            rho = LCFS_distance / (LCFS_distance - LIM_distance)
+        else:
+            raise Exception("Blob position not determined correctly")
+
+        print(f"rho: {rho}")
+        print(
+            f"point: {point.x}, LCFS: {nearest_point_on_LCFS.x}, LIM: {nearest_point_on_LIM.x}"
+        )
+        print("")
+
+        return rho
 
     def _calculate_velocity_rho(self):
         if self.life_time == 0:
