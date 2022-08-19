@@ -269,6 +269,7 @@ class Blob:
         return rhos, poloidal_positions
 
     def _calculate_rho(self, LCFS, LIM, point):
+        # sourcery skip: raise-specific-error
         nearest_point_on_LCFS, _ = nearest_points(LCFS, point)
         nearest_point_on_LIM, _ = nearest_points(LIM, point)
         LCFS_distance = point.distance(LCFS)
@@ -285,12 +286,6 @@ class Blob:
             rho = LCFS_distance / (LCFS_distance - LIM_distance)
         else:
             raise Exception("Blob position not determined correctly")
-
-        print(f"rho: {rho}")
-        print(
-            f"point: {point.x}, LCFS: {nearest_point_on_LCFS.x}, LIM: {nearest_point_on_LIM.x}"
-        )
-        print("")
 
         return rho
 
