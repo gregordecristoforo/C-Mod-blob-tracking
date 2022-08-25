@@ -260,7 +260,7 @@ class Blob:
         poloidal_positions = []
 
         R_values, Z_values = self._find_center_of_mass_R_Z()
-        if np.sum(np.isnan(R_values)) == 1:
+        if np.sum(np.isnan(R_values)) > 0:
             print("nan detected in R_values, all rho values are set to 0")
             return np.zeros(len(R_values)), np.zeros(len(R_values))
 
