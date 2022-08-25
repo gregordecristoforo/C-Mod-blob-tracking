@@ -40,10 +40,10 @@ class Blob:
         self.velocities_R, self.velocities_Z = self._calculate_velocities_R_Z()
         self.width_R, self.width_Z = self._calculate_sizes_R_Z()
         self.rhos, self.poloidal_positions = self._calculate_rho_poloidal_values()
-        self.velocity_rho = self._calculate_velocity_rho()
+        # self.velocity_rho = self._calculate_velocity_rho()
         # self.plot_single_frames() # useful for debugging
-        self.remove_blobs_outside_of_SOL()
-        self._remove_unnecessary_properties()
+        # self.remove_blobs_outside_of_SOL()
+        # self._remove_unnecessary_properties()
 
     def __repr__(self) -> str:
         return (
@@ -242,7 +242,7 @@ class Blob:
                 self.width_y[i] = None
                 self.width_R[i] = None
                 self.width_Z[i] = None
-                self.rhos[i] = None
+                # self.rhos[i] = None
                 with contextlib.suppress(Exception):
                     self.velocities_x[i] = None
                     self.velocities_y[i] = None
@@ -260,6 +260,10 @@ class Blob:
         poloidal_positions = []
 
         R_values, Z_values = self._find_center_of_mass_R_Z()
+        if np.sum(np.isnan(R_values)) == 1:
+            print("nan detected in R_values, all rho values are set to 0")
+            return np.zeros(len(R_values)), np.zeros(len(R_values))
+
         for R, Z in zip(R_values, Z_values):
             point = geom.Point(R * 0.01, Z * 0.01)  # convert to m
             rho = self._calculate_rho(LCFS, LIM, point)
