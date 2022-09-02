@@ -223,11 +223,10 @@ class Blob:
 
     def remove_blobs_outside_of_SOL(self):
         directory = os.path.dirname(self._file_name)
-        print(directory)
-        R_LCFS = np.load("data/R_LCFS.npy") * 100
-        Z_LCFS = np.load("data/Z_LCFS.npy") * 100
-        R_LIM = np.load("data/R_LIM.npy") * 100
-        Z_LIM = np.load("data/Z_LIM.npy") * 100
+        R_LCFS = np.load(f"{directory}/R_LCFS.npy") * 100
+        Z_LCFS = np.load(f"{directory}/Z_LCFS.npy") * 100
+        R_LIM = np.load(f"{directory}/R_LIM.npy") * 100
+        Z_LIM = np.load(f"{directory}/Z_LIM.npy") * 100
 
         f_LCFS = interpolate.interp1d(Z_LCFS, R_LCFS, kind="cubic",)
         f_LIM = interpolate.interp1d(Z_LIM, R_LIM, kind="cubic",)
@@ -254,9 +253,10 @@ class Blob:
                 self.life_time -= 1
 
     def _calculate_rho_poloidal_values(self):
+        directory = os.path.dirname(self._file_name)
         LCFS_coords = np.loadtxt(f"{directory}/LCFS_interpolated.txt")
         LIM_coords = np.loadtxt(f"{directory}/LIM_interpolated.txt")
-
+        
         LCFS = geom.LineString(LCFS_coords)
         LIM = geom.LineString(LIM_coords)
         rhos = []
