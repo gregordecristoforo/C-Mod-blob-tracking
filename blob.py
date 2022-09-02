@@ -266,7 +266,7 @@ class Blob:
 
         for R, Z in zip(R_values, Z_values):
             point = geom.Point(R * 0.01, Z * 0.01)  # convert to m
-            rho = self._calculate_rho(LCFS, LIM, point)
+            rho = self._calculate_rho_in_cm(LCFS, point)
             rhos.append(rho)
             poloidal_position = nearest_points(LCFS, point)
             poloidal_positions.append(poloidal_position)
@@ -293,6 +293,22 @@ class Blob:
 
         return rho
 
+    def _calculate_rho_in_cm(self,LCFS, point):
+        # sourcery skip: raise-specific-error
+        nearest_point_on_LCFS, _ = nearest_points(LCFS, point)
+        LCFS_distance = point.distance(LCFS)
+
+        if nearest_point_on_LCFS.x > point.x:
+            """blob inside LCFS"""
+            rho = -LCFS_distance *100
+        elif nearest_point_on_LCFS.x < point.x:
+            """blob in SOL"""
+            rho = LCFS_distance * 100 
+        else:
+            raise Exception("Blob position not determined correctly")
+
+        return rho
+        
     def _calculate_velocity_rho(self):
         if self.life_time == 0:
             return 0
