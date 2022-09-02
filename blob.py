@@ -41,7 +41,7 @@ class Blob:
         self.velocities_R, self.velocities_Z = self._calculate_velocities_R_Z()
         self.width_R, self.width_Z = self._calculate_sizes_R_Z()
         self.rhos, self.poloidal_positions = self._calculate_rho_poloidal_values()
-        # self.velocity_rho = self._calculate_velocity_rho()
+        self.velocity_rho = self._calculate_velocity_rho()
         # self.plot_single_frames() # useful for debugging
         # self.remove_blobs_outside_of_SOL()
         # self._remove_unnecessary_properties()
@@ -254,8 +254,13 @@ class Blob:
 
     def _calculate_rho_poloidal_values(self):
         directory = os.path.dirname(self._file_name)
-        LCFS_coords = np.loadtxt(f"{directory}/LCFS_interpolated.txt")
-        LIM_coords = np.loadtxt(f"{directory}/LIM_interpolated.txt")
+        
+        R_LCFS = np.load(f"{directory}/R_LCFS_21.npy")
+        Z_LCFS = np.load(f"{directory}/Z_LCFS_21.npy")
+        R_LIM = np.load(f"{directory}/R_limiter_21.npy")
+        Z_LIM = np.load(f"{directory}/Z_limiter_21.npy")
+        LIM_coords = np.vstack((R_LIM, Z_LIM)).T
+        LCFS_coords = np.vstack((R_LCFS, Z_LCFS)).T
         
         LCFS = geom.LineString(LCFS_coords)
         LIM = geom.LineString(LIM_coords)
