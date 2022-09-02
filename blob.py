@@ -9,6 +9,7 @@ from scipy.signal import savgol_filter
 from scipy import interpolate
 import shapely.geometry as geom
 from shapely.ops import nearest_points
+import os.path
 
 
 class Blob:
@@ -221,6 +222,8 @@ class Blob:
                 self.life_time -= 1
 
     def remove_blobs_outside_of_SOL(self):
+        directory = os.path.dirname(self._file_name)
+        print(directory)
         R_LCFS = np.load("data/R_LCFS.npy") * 100
         Z_LCFS = np.load("data/Z_LCFS.npy") * 100
         R_LIM = np.load("data/R_LIM.npy") * 100
@@ -251,8 +254,8 @@ class Blob:
                 self.life_time -= 1
 
     def _calculate_rho_poloidal_values(self):
-        LCFS_coords = np.loadtxt("data/LCFS_interpolated.txt")
-        LIM_coords = np.loadtxt("data/LIM_interpolated.txt")
+        LCFS_coords = np.loadtxt(f"{directory}/LCFS_interpolated.txt")
+        LIM_coords = np.loadtxt(f"{directory}/LIM_interpolated.txt")
 
         LCFS = geom.LineString(LCFS_coords)
         LIM = geom.LineString(LIM_coords)
