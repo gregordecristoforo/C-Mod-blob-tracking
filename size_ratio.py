@@ -40,8 +40,8 @@ mean_elongation_rf_off = [np.mean(blob) for blob in rf_off["elongation"]]
 number_blobs_rf_on = np.arange(len(mean_elongation_rf_on))
 number_blobs_rf_off = np.arange(len(mean_elongation_rf_off))
 
-plt.hist(mean_elongation_rf_off, label='RF off',alpha=0.5,density=True, range=(0,5),bins=32)
-plt.hist(mean_elongation_rf_on, label='RF on', alpha=0.5,density=True,range=(0,5),bins=32)
+plt.hist(mean_elongation_rf_off, label='RF off',alpha=0.5,density=True, range=(0.5,7),bins=32)
+plt.hist(mean_elongation_rf_on, label='RF on', alpha=0.5,density=True,range=(0.5,7),bins=32)
 plt.ylabel('P(elongation)')
 plt.xlabel('elongation')
 plt.legend()
