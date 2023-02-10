@@ -29,6 +29,7 @@ class Blob:
         self._VIoU = VIoU
         self._centers_of_mass_x = centers_of_mass_x
         self._centers_of_mass_y = centers_of_mass_y
+        self.center_of_mass_R, self.center_of_mass_Z = self._find_center_of_mass_R_Z()
         self._polygon_of_predicted_blobs = polygon_of_predicted_blobs
         self._polygon_of_brightness_contours = polygon_of_brightness_contours
         self.frames_of_appearance = frames_of_appearance
@@ -40,8 +41,9 @@ class Blob:
         self.amplitudes = self._calculate_amplitudes()
         self.velocities_R, self.velocities_Z = self._calculate_velocities_R_Z()
         self.width_R, self.width_Z = self._calculate_sizes_R_Z()
-        self.rhos, self.poloidal_positions = self._calculate_rho_poloidal_values()
-        self.velocity_rho = self._calculate_velocity_rho()
+        # self.rhos, self.poloidal_positions = self._calculate_rho_poloidal_values()
+        # self.velocity_rho = self._calculate_velocity_rho()
+        self.smoothen_all_parameters()
         # self.plot_single_frames() # useful for debugging
         # self.remove_blobs_outside_of_SOL()
         # self._remove_unnecessary_properties()
@@ -178,12 +180,12 @@ class Blob:
 
     def _extract_dx(self):
         ds = self._load_raw_data()
-        return np.abs(ds.R.diff("x").values[0, 0]) * 0.01  # 0.01 for cm to m conversion
+        return np.abs(ds.R.diff("x").values[0, 0]) * 1#0.01  # 0.01 for cm to m conversion
 
     def _extract_dy(self):
         ds = self._load_raw_data()
         return (
-            np.mean(ds.Z.diff("y").values) * 0.01
+            np.mean(ds.Z.diff("y").values) * 1#0.01
         )  # mean values since min is 0.09920597 and max is 0.099206686
 
     def smoothen_all_parameters(self, window_length=5, polyorder=1):
@@ -194,12 +196,17 @@ class Blob:
             self.width_y = savgol_filter(self.width_y, window_length, polyorder)
             self.width_R = savgol_filter(self.width_R, window_length, polyorder)
             self.width_Z = savgol_filter(self.width_Z, window_length, polyorder)
+            self.center_of_mass_R = savgol_filter(self.center_of_mass_R, window_length, polyorder)
+            self.center_of_mass_Z = savgol_filter(self.center_of_mass_Z, window_length, polyorder)
 
             self.velocities_x = savgol_filter(
                 self.velocities_x, window_length - 2, polyorder
             )
             self.velocities_y = savgol_filter(
                 self.velocities_y, window_length - 2, polyorder
+            )
+            self.velocity_rho = savgol_filter(
+                self.velocity_rho, window_length - 2, polyorder
             )
         except Exception:
             print(self.__repr__(), ": blob lifetime to short for savgol filter")
@@ -255,10 +262,10 @@ class Blob:
     def _calculate_rho_poloidal_values(self):
         directory = os.path.dirname(self._file_name)
         
-        R_LCFS = np.load(f"{directory}/R_LCFS_21.npy")
-        Z_LCFS = np.load(f"{directory}/Z_LCFS_21.npy")
-        R_LIM = np.load(f"{directory}/R_limiter_21.npy")
-        Z_LIM = np.load(f"{directory}/Z_limiter_21.npy")
+        R_LCFS = np.load(f"{directory}/R_LCFS.npy")
+        Z_LCFS = np.load(f"{directory}/Z_LCFS.npy")
+        R_LIM = np.load(f"{directory}/R_limiter.npy")
+        Z_LIM = np.load(f"{directory}/Z_limiter.npy")
         LIM_coords = np.vstack((R_LIM, Z_LIM)).T
         LCFS_coords = np.vstack((R_LCFS, Z_LCFS)).T
         
