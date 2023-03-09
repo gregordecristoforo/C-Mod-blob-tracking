@@ -2,6 +2,9 @@ import pickle
 from scipy import interpolate
 import matplotlib.pyplot as plt
 import numpy as np
+import cosmoplots 
+
+axes_size = cosmoplots.set_rcparams_dynamo(plt.rcParams, num_cols=1, ls="thin")
 
 ds_on = pickle.load(
     open("../../Documents/CMod data/raymond_shots/1110310009/ds_ICRF_on.pickle", "rb")
@@ -33,7 +36,8 @@ stats_off["lifetimes"] = [blob.life_time for blob in ds_off]
 # plt.show()
 
 index = np.random.randint(0,len(ds_on), size=100)
-for i in index:
+# for i in index:
+for i in range(len(ds_on)):
     blob = ds_on[i]
     plt.plot(blob.center_of_mass_R, blob.center_of_mass_Z)
     # print(blob.life_time)
@@ -44,6 +48,9 @@ f = interpolate.interp1d(R, Z, fill_value='extrapolate')
 
 plt.plot([89.5,91.5], [f(89.5), f(91.5)], '--k')
 plt.plot(R_LCFS,Z_LCFS, '--k')
+plt.ylim(-8,2)
+plt.xlabel('R')
+plt.ylabel('Z')
 # plt.plot(r_limiter,z_limiter, '--k')
 
 plt.show()
