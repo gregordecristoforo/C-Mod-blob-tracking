@@ -1,7 +1,10 @@
 import pickle
+import cosmoplots
 from scipy import interpolate
 import matplotlib.pyplot as plt
 import numpy as np
+
+axes_size = cosmoplots.set_rcparams_dynamo(plt.rcParams, num_cols=1, ls="thin")
 
 ds_on = pickle.load(
     open("../../Documents/CMod data/raymond_shots/1110310009/ds_ICRF_on.pickle", "rb")
@@ -27,7 +30,7 @@ for i in range(len(sizes_on)):
         / min(width_x_on[i], width_y_on[i])
     )
 
-plt.hist(elongation_on, density=True, alpha = 0.5, label='ICRF on', bins = 32)
+plt.hist(elongation_on, density=True, alpha = 0.5, label='ICRF on', bins = 32, range=(0,10))
 
 sizes_off = [blob.sizes for blob in ds_off]
 width_x_off = [blob.width_x for blob in ds_off]
@@ -46,8 +49,12 @@ for i in range(len(sizes_off)):
         / min(width_x_off[i], width_y_off[i])
     )
 
-plt.hist(elongation_off, density=True, alpha=0.5, label='ICRF off ', bins = 32)
+plt.hist(elongation_off, density=True, alpha=0.5, label='ICRF off ', bins = 32, range=(0,10))
+
 plt.legend()
 print(f"elongation on {np.mean(elongation_on)}")
 print(f"elongation off {np.mean(elongation_off)}")
+plt.xlim(0,10)
+plt.xlabel('Elongation')
+plt.ylabel('P(Elongation)')
 plt.show()
