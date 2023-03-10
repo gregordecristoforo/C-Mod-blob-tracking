@@ -6,11 +6,18 @@ import cosmoplots
 
 axes_size = cosmoplots.set_rcparams_dynamo(plt.rcParams, num_cols=1, ls="thin")
 
+# ds_on = pickle.load(
+#     open("../../Documents/CMod data/raymond_shots/1110310009/ds_ICRF_on.pickle", "rb")
+# )
+# ds_off = pickle.load(
+#     open("../../Documents/CMod data/raymond_shots/1110310009/ds_ICRF_off.pickle", "rb")
+# )
+
 ds_on = pickle.load(
-    open("../../Documents/CMod data/raymond_shots/1110310009/ds_ICRF_on.pickle", "rb")
+    open("../../Documents/CMod data/raymond_shots/1110310009/blobs_inside_layer_on.pickle", "rb")
 )
 ds_off = pickle.load(
-    open("../../Documents/CMod data/raymond_shots/1110310009/ds_ICRF_off.pickle", "rb")
+    open("../../Documents/CMod data/raymond_shots/1110310009/blobs_inside_layer_off.pickle", "rb")
 )
 
 R_LCFS = np.load('/home/gregor/Documents/CMod data/raymond_shots/1110310009/R_LCFS.npy')*100
@@ -28,14 +35,7 @@ stats_on = {}
 stats_on["lifetimes"] = [blob.life_time for blob in ds_on]
 stats_off["lifetimes"] = [blob.life_time for blob in ds_off]
 
-# print(f"lifetime on {np.mean(stats_on['lifetimes'])}")
-# print(f"lifetime off {np.mean(stats_off['lifetimes'])}")
-#
-# plt.hist(stats_on['lifetimes'], density=True)
-# plt.hist(stats_off['lifetimes'], density=True)
-# plt.show()
-
-index = np.random.randint(0,len(ds_on), size=100)
+# index = np.random.randint(0,len(ds_on), size=100)
 # for i in index:
 for i in range(len(ds_on)):
     blob = ds_on[i]
