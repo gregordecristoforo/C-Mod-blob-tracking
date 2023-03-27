@@ -127,7 +127,6 @@ class Blob:
             R_grid = ds.R.values
             Z_grid = ds.Z.values
             R_grid = np.flip(R_grid, axis=(1))  # orientation different to frames
-            R_grid = np.flip(R_grid, axis=(1))  # orientation different to frames
             mask = get_poly_mask(self._polygon_of_predicted_blobs[i], 64, 64)
             R_values = R_grid[mask.T]
             Z_values = Z_grid[mask.T]
